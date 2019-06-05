@@ -18,7 +18,13 @@
 "spi\main.o"
 "spi\stm32f4xx_hal_msp.o"
 "spi\stm32f4xx_it.o"
+"spi\fatfs.o"
+"spi\user_diskio.o"
 "spi\system_stm32f4xx.o"
+"spi\diskio.o"
+"spi\ff_gen_drv.o"
+"spi\ff.o"
+"spi\syscall.o"
 --library_type=microlib --strict --scatter "SPI\SPI.sct"
 --diag_suppress=L6329 --summary_stderr --info summarysizes --map --load_addr_map_info --xref --callgraph --symbols
 --info sizes --info totals --info unused --info veneers

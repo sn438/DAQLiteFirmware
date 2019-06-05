@@ -28,3 +28,10 @@ spi\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_flash_ramfunc.h
 spi\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr.h
 spi\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr_ex.h
 spi\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_spi.h
+spi\main.o: ../Inc/fatfs.h
+spi\main.o: ../Middlewares/Third_Party/FatFs/src/ff.h
+spi\main.o: ../Middlewares/Third_Party/FatFs/src/integer.h
+spi\main.o: ../Inc/ffconf.h
+spi\main.o: ../Middlewares/Third_Party/FatFs/src/ff_gen_drv.h
+spi\main.o: ../Middlewares/Third_Party/FatFs/src/diskio.h
+spi\main.o: ../Inc/user_diskio.h

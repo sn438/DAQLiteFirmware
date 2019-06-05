@@ -3,41 +3,52 @@
   * File Name          : main.c
   * Description        : Main program body
   ******************************************************************************
-  ** This notice applies to any and all portions of this file
+  * This notice applies to any and all portions of this file
   * that are not between comment pairs USER CODE BEGIN and
   * USER CODE END. Other portions of this file, whether 
   * inserted by the user or by software development tools
   * are owned by their respective copyright owners.
   *
-  * COPYRIGHT(c) 2019 STMicroelectronics
+  * Copyright (c) 2019 STMicroelectronics International N.V. 
+  * All rights reserved.
   *
-  * Redistribution and use in source and binary forms, with or without modification,
-  * are permitted provided that the following conditions are met:
-  *   1. Redistributions of source code must retain the above copyright notice,
-  *      this list of conditions and the following disclaimer.
-  *   2. Redistributions in binary form must reproduce the above copyright notice,
-  *      this list of conditions and the following disclaimer in the documentation
-  *      and/or other materials provided with the distribution.
-  *   3. Neither the name of STMicroelectronics nor the names of its contributors
-  *      may be used to endorse or promote products derived from this software
-  *      without specific prior written permission.
+  * Redistribution and use in source and binary forms, with or without 
+  * modification, are permitted, provided that the following conditions are met:
   *
-  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-  * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-  * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  * 1. Redistribution of source code must retain the above copyright notice, 
+  *    this list of conditions and the following disclaimer.
+  * 2. Redistributions in binary form must reproduce the above copyright notice,
+  *    this list of conditions and the following disclaimer in the documentation
+  *    and/or other materials provided with the distribution.
+  * 3. Neither the name of STMicroelectronics nor the names of other 
+  *    contributors to this software may be used to endorse or promote products 
+  *    derived from this software without specific written permission.
+  * 4. This software, including modifications and/or derivative works of this 
+  *    software, must execute solely and exclusively on microcontroller or
+  *    microprocessor devices manufactured by or for STMicroelectronics.
+  * 5. Redistribution and use of this software other than as permitted under 
+  *    this license is void and will automatically terminate your rights under 
+  *    this license. 
+  *
+  * THIS SOFTWARE IS PROVIDED BY STMICROELECTRONICS AND CONTRIBUTORS "AS IS" 
+  * AND ANY EXPRESS, IMPLIED OR STATUTORY WARRANTIES, INCLUDING, BUT NOT 
+  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A 
+  * PARTICULAR PURPOSE AND NON-INFRINGEMENT OF THIRD PARTY INTELLECTUAL PROPERTY
+  * RIGHTS ARE DISCLAIMED TO THE FULLEST EXTENT PERMITTED BY LAW. IN NO EVENT 
+  * SHALL STMICROELECTRONICS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+  * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+  * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, 
+  * OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
+  * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING 
+  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   *
   ******************************************************************************
   */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "stm32f4xx_hal.h"
+#include "fatfs.h"
 
 /* USER CODE BEGIN Includes */
 
@@ -45,6 +56,8 @@
 
 /* Private variables ---------------------------------------------------------*/
 SPI_HandleTypeDef hspi1;
+DMA_HandleTypeDef hdma_spi1_tx;
+DMA_HandleTypeDef hdma_spi1_rx;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
@@ -54,10 +67,8 @@ SPI_HandleTypeDef hspi1;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
+static void MX_DMA_Init(void);
 static void MX_SPI1_Init(void);
-static uint8_t SD_SendCmd(uint8_t cmd, uint32_t arg);
-static uint8_t SD_ReadyWait(void);
-extern volatile uint8_t Timer1, Timer2; 
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
@@ -96,9 +107,10 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_SPI1_Init();
+  MX_FATFS_Init();
 
-  
   /* USER CODE BEGIN 2 */
   uint8_t cmd_arg [ 6 ] ; 
   uint32_t Count =  0xFFFF ; 
@@ -142,11 +154,7 @@ int main(void)
 	DESELECT();
   SPI_TxByte(0XFF);
   SELECT(); 
-	if (SD_SendCmd(CMD0, 0) == 1) 
-  { 
-		//HAL_GPIO_WritePin ( GPIOG , GPIO_PIN_14 ,  GPIO_PIN_RESET ) ;
-		HAL_GPIO_WritePin ( GPIOG , GPIO_PIN_13 ,  GPIO_PIN_SET ) ; 
-	}
+	
 
 
   /* USER CODE END 2 */
@@ -243,6 +251,24 @@ static void MX_SPI1_Init(void)
 
 }
 
+/** 
+  * Enable DMA controller clock
+  */
+static void MX_DMA_Init(void) 
+{
+  /* DMA controller clock enable */
+  __HAL_RCC_DMA2_CLK_ENABLE();
+
+  /* DMA interrupt init */
+  /* DMA2_Stream0_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA2_Stream0_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA2_Stream0_IRQn);
+  /* DMA2_Stream3_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA2_Stream3_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA2_Stream3_IRQn);
+
+}
+
 /** Configure pins as 
         * Analog 
         * Input 
@@ -283,29 +309,11 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-
-/* USER CODE END 4 */
-
-/**
-  * @brief  This function is executed in case of error occurrence.
-  * @param  None
-  * @retval None
-  */
-void _Error_Handler(char * file, int line)
-{
-  /* USER CODE BEGIN Error_Handler_Debug */
-  /* User can add his own implementation to report the HAL error return state */
-  while(1) 
-  {
-  }
-  /* USER CODE END Error_Handler_Debug */ 
-}
-
 /** SPI data transfer **/ 
 static  void  SPI_TxByte (uint8_t data) 
 { 
   while  ( HAL_SPI_GetState ( & hspi1 )  !=  HAL_SPI_STATE_READY ) ; 
-  HAL_SPI_Transmit ( & hspi1 ,  & data ,  1 ,  5000 ) ; 
+  HAL_SPI_Transmit_DMA ( & hspi1 ,  & data ,  1) ; 
 } 
 
 /** SPI data send / receive return type function **/ 
@@ -316,7 +324,7 @@ static uint8_t SPI_RxByte ( void )
   data =  0 ; 
   
   while  (( HAL_SPI_GetState ( & hspi1 )  !=  HAL_SPI_STATE_READY ) ) ; 
-  HAL_SPI_TransmitReceive ( & hspi1 ,  & dummy ,  & data ,  1 ,  5000 ) ; 
+  HAL_SPI_TransmitReceive ( & hspi1 ,  & dummy ,  & data ,  1, 5000 ) ; 
   
   return data ; 
 } 
@@ -336,61 +344,23 @@ static  void  DESELECT ( void )
   HAL_GPIO_WritePin ( GPIOC , GPIO_PIN_7 ,  GPIO_PIN_SET ) ; 
 } 
 
-static uint8_t SD_SendCmd(uint8_t cmd, uint32_t arg) 
+/* USER CODE END 4 */
+
+/**
+  * @brief  This function is executed in case of error occurrence.
+  * @param  None
+  * @retval None
+  */
+void _Error_Handler(char * file, int line)
 {
-  uint8_t crc, res;
-  
-  /* SD?? ?? */
-  if (SD_ReadyWait() != 0xFF)
-    return 0xFF;
-  
-  /* ?? ?? ?? */
-  SPI_TxByte(cmd); 			/* Command */
-  SPI_TxByte((uint8_t) (arg >> 24)); 	/* Argument[31..24] */
-  SPI_TxByte((uint8_t) (arg >> 16)); 	/* Argument[23..16] */
-  SPI_TxByte((uint8_t) (arg >> 8)); 	/* Argument[15..8] */
-  SPI_TxByte((uint8_t) arg); 		/* Argument[7..0] */
-  
-  /* ??? CRC ?? */
-  crc = 0;  
-  if (cmd == 0x40)
-    crc = 0x95; /* CRC for CMD0(0) */
-  
-  if (cmd == 0x48)
-    crc = 0x87; /* CRC for CMD8(0x1AA) */
-  
-  /* CRC ?? */
-  SPI_TxByte(crc);
-  
-  /* CMD12 Stop Reading ??? ???? ?? ??? ??? ??? */
-  if (cmd == 0x4C)
-    SPI_RxByte();
-  
-  /* 10? ?? ?? ???? ????. */
-  uint8_t n = 10; 
-  do
+  /* USER CODE BEGIN Error_Handler_Debug */
+  /* User can add his own implementation to report the HAL error return state */
+  while(1) 
   {
-    res = SPI_RxByte();
-  } while ((res & 0x80) && --n);
-  
-  return res;
+  }
+  /* USER CODE END Error_Handler_Debug */ 
 }
-static uint8_t SD_ReadyWait(void) 
-{
-  uint8_t res;
-  
-  /* 500ms ??? ?? */
-  Timer2 = 50;
-  SPI_RxByte();
-  
-  do
-  {
-    /* 0xFF ?? ??? ? ?? SPI ?? */
-    res = SPI_RxByte();
-  } while ((res != 0xFF) && Timer2);
-  
-  return res;
-}
+
 #ifdef USE_FULL_ASSERT
 
 /**

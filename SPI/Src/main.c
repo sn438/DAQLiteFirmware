@@ -82,7 +82,6 @@ enum {
 __IO uint32_t wTransferStateTx = TRANSFER_WAIT;
 __IO uint32_t wTransferStateTxRx = TRANSFER_WAIT;
 
-//test
 
 int main(void)
 {

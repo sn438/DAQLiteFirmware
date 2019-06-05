@@ -3,52 +3,42 @@
   * File Name          : main.c
   * Description        : Main program body
   ******************************************************************************
-  * This notice applies to any and all portions of this file
+  ** This notice applies to any and all portions of this file
   * that are not between comment pairs USER CODE BEGIN and
   * USER CODE END. Other portions of this file, whether 
   * inserted by the user or by software development tools
   * are owned by their respective copyright owners.
   *
-  * Copyright (c) 2019 STMicroelectronics International N.V. 
-  * All rights reserved.
+  * COPYRIGHT(c) 2019 STMicroelectronics
   *
-  * Redistribution and use in source and binary forms, with or without 
-  * modification, are permitted, provided that the following conditions are met:
+  * Redistribution and use in source and binary forms, with or without modification,
+  * are permitted provided that the following conditions are met:
+  *   1. Redistributions of source code must retain the above copyright notice,
+  *      this list of conditions and the following disclaimer.
+  *   2. Redistributions in binary form must reproduce the above copyright notice,
+  *      this list of conditions and the following disclaimer in the documentation
+  *      and/or other materials provided with the distribution.
+  *   3. Neither the name of STMicroelectronics nor the names of its contributors
+  *      may be used to endorse or promote products derived from this software
+  *      without specific prior written permission.
   *
-  * 1. Redistribution of source code must retain the above copyright notice, 
-  *    this list of conditions and the following disclaimer.
-  * 2. Redistributions in binary form must reproduce the above copyright notice,
-  *    this list of conditions and the following disclaimer in the documentation
-  *    and/or other materials provided with the distribution.
-  * 3. Neither the name of STMicroelectronics nor the names of other 
-  *    contributors to this software may be used to endorse or promote products 
-  *    derived from this software without specific written permission.
-  * 4. This software, including modifications and/or derivative works of this 
-  *    software, must execute solely and exclusively on microcontroller or
-  *    microprocessor devices manufactured by or for STMicroelectronics.
-  * 5. Redistribution and use of this software other than as permitted under 
-  *    this license is void and will automatically terminate your rights under 
-  *    this license. 
-  *
-  * THIS SOFTWARE IS PROVIDED BY STMICROELECTRONICS AND CONTRIBUTORS "AS IS" 
-  * AND ANY EXPRESS, IMPLIED OR STATUTORY WARRANTIES, INCLUDING, BUT NOT 
-  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A 
-  * PARTICULAR PURPOSE AND NON-INFRINGEMENT OF THIRD PARTY INTELLECTUAL PROPERTY
-  * RIGHTS ARE DISCLAIMED TO THE FULLEST EXTENT PERMITTED BY LAW. IN NO EVENT 
-  * SHALL STMICROELECTRONICS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-  * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-  * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, 
-  * OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
-  * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING 
-  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
-  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+  * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+  * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   *
   ******************************************************************************
   */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "stm32f4xx_hal.h"
-#include "fatfs.h"
+#include "stm32f4xx_hal_dma.h"
 
 /* USER CODE BEGIN Includes */
 
@@ -56,8 +46,8 @@
 
 /* Private variables ---------------------------------------------------------*/
 SPI_HandleTypeDef hspi1;
-DMA_HandleTypeDef hdma_spi1_tx;
 DMA_HandleTypeDef hdma_spi1_rx;
+DMA_HandleTypeDef hdma_spi1_tx;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
@@ -81,6 +71,18 @@ static uint8_t SPI_RxByte (void);
 static  void  SELECT (void);
 static void DESELECT(void);
 /* USER CODE END 0 */
+
+enum {
+	TRANSFER_WAIT,
+	TRANSFER_COMPLETE,
+	TRANSFER_ERROR
+};
+
+
+__IO uint32_t wTransferStateTx = TRANSFER_WAIT;
+__IO uint32_t wTransferStateTxRx = TRANSFER_WAIT;
+
+//test
 
 int main(void)
 {
@@ -109,18 +111,18 @@ int main(void)
   MX_GPIO_Init();
   MX_DMA_Init();
   MX_SPI1_Init();
-  MX_FATFS_Init();
 
   /* USER CODE BEGIN 2 */
   uint8_t cmd_arg [ 6 ] ; 
   uint32_t Count =  0xFFFF ; 
   
   /** Send SPI message in Deselect state and put it in standby state. **/ 
+	
   DESELECT ( ) ; 
   
   for ( int i =  0 ; i <  10 ; i ++ ) 
   { 
-    SPI_TxByte ( 0xFF ) ; 
+    SPI_TxByte ( 0xFF ) ;
   } 
   
   /** SPI Chips Select **/ 
@@ -136,14 +138,15 @@ int main(void)
   cmd_arg [ 5 ]  =  0x95 ; 
   
   /** Send the command **/ 
+	
   for  ( int i =  0 ; i <  6 ; i ++) 
   { 
     SPI_TxByte ( cmd_arg [ i ] ) ; 
   } 
+	
   
   /** Wait for a response **/
-  while  ((SPI_RxByte()  !=  0x01) && Count) 
-  { 
+	while  ((SPI_RxByte()  !=  0x01) && Count){
     HAL_GPIO_WritePin ( GPIOG , GPIO_PIN_14 ,  GPIO_PIN_RESET ) ;
 		HAL_GPIO_WritePin ( GPIOG , GPIO_PIN_13 ,  GPIO_PIN_RESET ) ; 	
 		Count--;
@@ -151,10 +154,10 @@ int main(void)
 	if (Count != 0) {
 		HAL_GPIO_WritePin ( GPIOG , GPIO_PIN_14 ,  GPIO_PIN_SET ) ;
 	}
+
 	DESELECT();
   SPI_TxByte(0XFF);
   SELECT(); 
-	
 
 
   /* USER CODE END 2 */
@@ -194,8 +197,8 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
   RCC_OscInitStruct.PLL.PLLM = 8;
-  RCC_OscInitStruct.PLL.PLLN = 72;
-  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
+  RCC_OscInitStruct.PLL.PLLN = 50;
+  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV4;
   RCC_OscInitStruct.PLL.PLLQ = 7;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
@@ -208,10 +211,10 @@ void SystemClock_Config(void)
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV8;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV4;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
@@ -309,11 +312,15 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-/** SPI data transfer **/ 
-static  void  SPI_TxByte (uint8_t data) 
+	static  void  SPI_TxByte (uint8_t data) 
 { 
-  while  ( HAL_SPI_GetState ( & hspi1 )  !=  HAL_SPI_STATE_READY ) ; 
-  HAL_SPI_Transmit_DMA ( & hspi1 ,  & data ,  1) ; 
+  wTransferStateTx = TRANSFER_WAIT;
+	while  (( HAL_SPI_GetState ( & hspi1 )  !=  HAL_SPI_STATE_READY ) ) ; 
+	HAL_SPI_Transmit_DMA ( & hspi1 ,  & data ,  1); 
+	 while (wTransferStateTx == TRANSFER_WAIT)
+  {
+  }
+	
 } 
 
 /** SPI data send / receive return type function **/ 
@@ -323,9 +330,12 @@ static uint8_t SPI_RxByte ( void )
   dummy =  0xFF ; 
   data =  0 ; 
   
-  while  (( HAL_SPI_GetState ( & hspi1 )  !=  HAL_SPI_STATE_READY ) ) ; 
-  HAL_SPI_TransmitReceive ( & hspi1 ,  & dummy ,  & data ,  1, 5000 ) ; 
-  
+	wTransferStateTxRx = TRANSFER_WAIT;
+	while  (( HAL_SPI_GetState ( & hspi1 )  !=  HAL_SPI_STATE_READY ) ); 
+  HAL_SPI_TransmitReceive_DMA( & hspi1 ,  & dummy ,  & data, 1) ; 
+  while (wTransferStateTxRx == TRANSFER_WAIT)
+  {
+  }
   return data ; 
 } 
 
@@ -344,6 +354,15 @@ static  void  DESELECT ( void )
   HAL_GPIO_WritePin ( GPIOC , GPIO_PIN_7 ,  GPIO_PIN_SET ) ; 
 } 
 
+void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi)
+{
+	wTransferStateTx = TRANSFER_COMPLETE;
+}
+
+void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
+{
+	wTransferStateTxRx = TRANSFER_COMPLETE;
+}
 /* USER CODE END 4 */
 
 /**

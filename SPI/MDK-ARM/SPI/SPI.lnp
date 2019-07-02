@@ -22,6 +22,7 @@
 "spi\ff_gen_drv.o"
 "spi\syscall.o"
 "spi\ccsbcs.o"
+"spi\fatfs_sd.o"
 "spi\main.o"
 "spi\user_diskio.o"
 "spi\fatfs.o"

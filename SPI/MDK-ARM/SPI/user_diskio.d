@@ -36,3 +36,4 @@ spi\user_diskio.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr.h
 spi\user_diskio.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr_ex.h
 spi\user_diskio.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_spi.h
 spi\user_diskio.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdlib.h
+spi\user_diskio.o: ../Inc/fatfs_sd.h

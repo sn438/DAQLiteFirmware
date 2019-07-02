@@ -64,20 +64,9 @@ static void MX_SPI1_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-static  void  SPI_TxByte (uint8_t data);
-static uint8_t SPI_RxByte (void);
 static  void  SELECT (void);
 static void DESELECT(void);
 
-enum {
-	TRANSFER_WAIT,
-	TRANSFER_COMPLETE,
-	TRANSFER_ERROR
-};
-
-
-__IO uint32_t wTransferStateTx = TRANSFER_WAIT;
-__IO uint32_t wTransferStateTxRx = TRANSFER_WAIT;
 
 /* USER CODE END 0 */
 
@@ -114,55 +103,35 @@ int main(void)
   MX_SPI1_Init();
   MX_FATFS_Init();
   /* USER CODE BEGIN 2 */
-  uint8_t cmd_arg [ 6 ] ; 
-  uint32_t Count =  0xFFFF ; 
-  
-  /** Send SPI message in Deselect state and put it in standby state. **/ 
+	FATFS myFATFS;
+	FIL myFILE;
+	UINT testByte;
 	
-  DESELECT ( ) ; 
-  
-  for ( int i =  0 ; i <  10 ; i ++ ) 
-  { 
-    SPI_TxByte ( 0xFF ) ;
-  } 
-  
-  /** SPI Chips Select **/ 
-  SELECT ( ) ; 
-  
-	uint8_t CMD0 = 0x40 + 0;
-  /** Initial GO_IDLE_STATE state transition **/ 
-  cmd_arg [ 0 ]  =  (CMD0|0x40) ; 
-  cmd_arg [ 1 ]  =  0 ; 
-  cmd_arg [ 2 ]  =  0 ; 
-  cmd_arg [ 3 ]  =  0 ; 
-  cmd_arg [ 4 ]  =  0 ; 
-  cmd_arg [ 5 ]  =  0x95 ; 
-  
-  /** Send the command **/ 
-	
-  for  ( int i =  0 ; i <  6 ; i ++) 
-  { 
-    SPI_TxByte ( cmd_arg [ i ] ) ; 
-  } 
-	
-  
-  /** Wait for a response **/
-	while  ((SPI_RxByte()  !=  0x01) && Count){
-    HAL_GPIO_WritePin ( GPIOG , GPIO_PIN_14 ,  GPIO_PIN_RESET ) ;
-		HAL_GPIO_WritePin ( GPIOG , GPIO_PIN_13 ,  GPIO_PIN_RESET ) ; 	
-		Count--;
-  } 
-	if (Count != 0) {
+	if(f_mount(&myFATFS, USERPath, 1) == FR_OK){
+			HAL_GPIO_WritePin ( GPIOG , GPIO_PIN_13 ,  GPIO_PIN_SET ) ; 	
+	}
+	char myFileName[] = "TEST1.txt";
+	if(f_open(&myFILE, myFileName, FA_WRITE|FA_CREATE_ALWAYS) == FR_OK){
+			HAL_GPIO_WritePin ( GPIOG , GPIO_PIN_14 ,  GPIO_PIN_SET ) ; 	
+	}
+	char myData[] = "Hello World, my name is Sujith";
+	if(f_write(&myFILE, myData, sizeof(myData), &testByte) == FR_OK){
+			HAL_GPIO_WritePin ( GPIOG , GPIO_PIN_13 ,  GPIO_PIN_SET ) ;
+			HAL_GPIO_WritePin ( GPIOG , GPIO_PIN_14 ,  GPIO_PIN_RESET ) ;
+	}
+	else{
+		HAL_GPIO_WritePin ( GPIOG , GPIO_PIN_13 ,  GPIO_PIN_RESET ) ;
 		HAL_GPIO_WritePin ( GPIOG , GPIO_PIN_14 ,  GPIO_PIN_SET ) ;
 	}
-
-	DESELECT();
-  SPI_TxByte(0XFF);
-  SELECT(); 
-
-
   /* USER CODE END 2 */
-
+	if(f_close(&myFILE) == FR_OK){
+		HAL_GPIO_WritePin ( GPIOG , GPIO_PIN_13 ,  GPIO_PIN_SET ) ;
+		HAL_GPIO_WritePin ( GPIOG , GPIO_PIN_14 ,  GPIO_PIN_SET ) ;
+	}
+	else{
+		HAL_GPIO_WritePin ( GPIOG , GPIO_PIN_13 ,  GPIO_PIN_RESET ) ;
+		HAL_GPIO_WritePin ( GPIOG , GPIO_PIN_14 ,  GPIO_PIN_RESET ) ;
+	}
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
@@ -195,8 +164,8 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
-  RCC_OscInitStruct.PLL.PLLM = 8;
-  RCC_OscInitStruct.PLL.PLLN = 72;
+  RCC_OscInitStruct.PLL.PLLM = 10;
+  RCC_OscInitStruct.PLL.PLLN = 64;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
   RCC_OscInitStruct.PLL.PLLQ = 7;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
@@ -208,11 +177,11 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
-  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV512;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV4;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
   {
     Error_Handler();
   }
@@ -311,57 +280,7 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-	static  void  SPI_TxByte (uint8_t data) 
-{ 
-  wTransferStateTx = TRANSFER_WAIT;
-	while  (( HAL_SPI_GetState ( & hspi1 )  !=  HAL_SPI_STATE_READY ) ) ; 
-	HAL_SPI_Transmit_DMA ( & hspi1 ,  & data ,  1); 
-	 while (wTransferStateTx == TRANSFER_WAIT)
-  {
-  }
-	
-} 
 
-/** SPI data send / receive return type function **/ 
-static uint8_t SPI_RxByte ( void ) 
-{ 
-  uint8_t dummy , data ; 
-  dummy =  0xFF ; 
-  data =  0 ; 
-  
-	wTransferStateTxRx = TRANSFER_WAIT;
-	while  (( HAL_SPI_GetState ( & hspi1 )  !=  HAL_SPI_STATE_READY ) ); 
-  HAL_SPI_TransmitReceive_DMA( & hspi1 ,  & dummy ,  & data, 1) ; 
-  while (wTransferStateTxRx == TRANSFER_WAIT)
-  {
-  }
-  return data ; 
-} 
-
-
-
-
-/** SPI Chip Select **/ 
-static  void  SELECT ( void ) 
-{ 
-  HAL_GPIO_WritePin ( GPIOC , GPIO_PIN_7 ,  GPIO_PIN_RESET ) ; 
-} 
-
-/** SPI Chip Deselect **/ 
-static  void  DESELECT ( void ) 
-{ 
-  HAL_GPIO_WritePin (GPIOC , GPIO_PIN_7 ,  GPIO_PIN_SET ) ; 
-} 
-
-void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi)
-{
-	wTransferStateTx = TRANSFER_COMPLETE;
-}
-
-void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
-{
-	wTransferStateTxRx = TRANSFER_COMPLETE;
-}
 /* USER CODE END 4 */
 
 /**

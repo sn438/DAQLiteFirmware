@@ -64,9 +64,6 @@ static void MX_SPI1_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-static  void  SELECT (void);
-static void DESELECT(void);
-
 
 /* USER CODE END 0 */
 
@@ -111,8 +108,12 @@ int main(void)
 			HAL_GPIO_WritePin ( GPIOG , GPIO_PIN_13 ,  GPIO_PIN_SET ) ; 	
 	}
 	char myFileName[] = "TEST1.txt";
+
 	if(f_open(&myFILE, myFileName, FA_WRITE|FA_CREATE_ALWAYS) == FR_OK){
 			HAL_GPIO_WritePin ( GPIOG , GPIO_PIN_14 ,  GPIO_PIN_SET ) ; 	
+	}
+	else{
+		HAL_GPIO_WritePin ( GPIOG , GPIO_PIN_13 ,  GPIO_PIN_RESET ) ; 	
 	}
 	char myData[] = "Hello World, my name is Sujith";
 	if(f_write(&myFILE, myData, sizeof(myData), &testByte) == FR_OK){
@@ -123,7 +124,6 @@ int main(void)
 		HAL_GPIO_WritePin ( GPIOG , GPIO_PIN_13 ,  GPIO_PIN_RESET ) ;
 		HAL_GPIO_WritePin ( GPIOG , GPIO_PIN_14 ,  GPIO_PIN_SET ) ;
 	}
-  /* USER CODE END 2 */
 	if(f_close(&myFILE) == FR_OK){
 		HAL_GPIO_WritePin ( GPIOG , GPIO_PIN_13 ,  GPIO_PIN_SET ) ;
 		HAL_GPIO_WritePin ( GPIOG , GPIO_PIN_14 ,  GPIO_PIN_SET ) ;
@@ -132,6 +132,8 @@ int main(void)
 		HAL_GPIO_WritePin ( GPIOG , GPIO_PIN_13 ,  GPIO_PIN_RESET ) ;
 		HAL_GPIO_WritePin ( GPIOG , GPIO_PIN_14 ,  GPIO_PIN_RESET ) ;
 	}
+  /* USER CODE END 2 */
+
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
@@ -177,7 +179,7 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
-  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV512;
+  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV128;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV4;
 

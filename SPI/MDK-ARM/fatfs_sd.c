@@ -39,7 +39,7 @@ static  void  DESELECT ( void )
 
 
 /** SPI data send / receive return type function **/ 
-/*
+
 static uint8_t SPI_RxByte ( void ) 
 { 
   uint8_t dummy , data ; 
@@ -54,9 +54,9 @@ static uint8_t SPI_RxByte ( void )
   }
   return data ; 
 } 
-*/
+
 /* USER CODE BEGIN 4 */
-/*
+
 	static  void  SPI_TxByte (uint8_t data) 
 { 
   wTransferStateTx = TRANSFER_WAIT;
@@ -78,15 +78,17 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
 	wTransferStateTxRx = TRANSFER_COMPLETE;
 }
 
-*/
+
 /* SPI ??? ??? ???? ?? */
+/*
 static  void  SPI_TxByte (uint8_t data) 
 { 
   while  ( HAL_SPI_GetState ( & hspi1 )  !=  HAL_SPI_STATE_READY ) ; 
   HAL_SPI_Transmit ( & hspi1 ,  & data ,  1 ,  5000 ) ; 
 } 
-
+*/
 /** SPI data send / receive return type function **/ 
+/*
 static uint8_t SPI_RxByte ( void ) 
 { 
   uint8_t dummy , data ; 
@@ -98,6 +100,7 @@ static uint8_t SPI_RxByte ( void )
   
   return data ; 
 } 
+*/
 static void SPI_RxBytePtr(uint8_t *buff) 
 {
   *buff = SPI_RxByte();
@@ -283,7 +286,7 @@ static BYTE SD_SendCmd(BYTE cmd, DWORD arg)
     crc = 0x87; /* CRC for CMD8(0x1AA) */
   
   /* CRC ?? */
-  SPI_TxByte(crc);
+  SPI_TxByte(crc|0x01);
   
   /* CMD12 Stop Reading ??? ???? ?? ??? ??? ??? */
   if (cmd == CMD12)
@@ -413,7 +416,6 @@ DSTATUS SD_disk_initialize(BYTE drv)
     /* Initialization failed */
     SD_PowerOff();
   }
-  
   return Stat;
 }
 
@@ -635,3 +637,4 @@ DRESULT SD_disk_ioctl(BYTE drv, BYTE ctrl, void *buff)
   
   return res;
 }
+

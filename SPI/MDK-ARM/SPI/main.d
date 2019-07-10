@@ -23,6 +23,8 @@ spi\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_gpio_ex.h
 spi\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_dma.h
 spi\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_dma_ex.h
 spi\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_cortex.h
+spi\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_adc.h
+spi\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_adc_ex.h
 spi\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_flash.h
 spi\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_flash_ex.h
 spi\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_flash_ramfunc.h
@@ -37,3 +39,5 @@ spi\main.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdlib.h
 spi\main.o: ../Middlewares/Third_Party/FatFs/src/ff_gen_drv.h
 spi\main.o: ../Middlewares/Third_Party/FatFs/src/diskio.h
 spi\main.o: ../Inc/user_diskio.h
+spi\main.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdio.h
+spi\main.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\string.h

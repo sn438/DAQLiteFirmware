@@ -1,4 +1,6 @@
 --cpu=Cortex-M4.fp
+"spi\stm32f4xx_hal_adc.o"
+"spi\stm32f4xx_hal_adc_ex.o"
 "spi\stm32f4xx_hal_spi.o"
 "spi\stm32f4xx_hal_tim.o"
 "spi\stm32f4xx_hal_tim_ex.o"

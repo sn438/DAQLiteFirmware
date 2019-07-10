@@ -9,7 +9,6 @@
 
 extern SPI_HandleTypeDef hspi1; 
 extern volatile uint8_t Timer1, Timer2;	/* 10ms ?? ???? ??? */
-extern volatile uint16_t Timer3;
 static volatile DSTATUS Stat = STA_NOINIT;              /* ??? ?? Flag*/
 static uint8_t CardType;                                /* SD ?? 0:MMC, 1:SDC, 2:Block addressing */
 static uint8_t PowerFlag = 0;  /* Power ?? Flag */
@@ -257,8 +256,6 @@ static BYTE SD_SendCmd(BYTE cmd, DWORD arg)
   /* CMD12 Stop Reading */
   if (cmd == CMD12)
     SPI_RxByte();
-  
-	while(Timer3){}
   
   uint8_t n = 10; 
   do

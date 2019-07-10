@@ -55,6 +55,7 @@
 volatile uint8_t FatFsCnt = 0;
 volatile uint8_t Timer1, Timer2;
 volatile uint16_t Timer3;
+volatile uint16_t Timer4;
 
 void SDTimer_Handler(void)
 {  
@@ -66,10 +67,14 @@ void SDTimer_Handler(void)
 	
 	if(Timer3 > 0)
 		Timer3--;
+	
+	if(Timer4 > 0)
+		Timer4--;
 }
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
+extern DMA_HandleTypeDef hdma_adc1;
 extern DMA_HandleTypeDef hdma_spi1_rx;
 extern DMA_HandleTypeDef hdma_spi1_tx;
 extern SPI_HandleTypeDef hspi1;
@@ -173,6 +178,20 @@ void DMA2_Stream3_IRQHandler(void)
 	
  
   /* USER CODE END DMA2_Stream3_IRQn 1 */
+}
+
+/**
+  * @brief This function handles DMA2 stream4 global interrupt.
+  */
+void DMA2_Stream4_IRQHandler(void)
+{
+  /* USER CODE BEGIN DMA2_Stream4_IRQn 0 */
+
+  /* USER CODE END DMA2_Stream4_IRQn 0 */
+  HAL_DMA_IRQHandler(&hdma_adc1);
+  /* USER CODE BEGIN DMA2_Stream4_IRQn 1 */
+
+  /* USER CODE END DMA2_Stream4_IRQn 1 */
 }
 
 /* USER CODE BEGIN 1 */
